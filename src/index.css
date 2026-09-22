@@ -1,0 +1,24 @@
+@import "@fontsource/gudea/latin-400.css";
+@import "@fontsource/gudea/latin-700.css";
+@import "tailwindcss";
+
+@theme {
+    --font-sans: "Gudea", ui-sans-serif, system-ui, sans-serif;
+    --color-brand: #7C1024;
+}
+
+html,
+body,
+#root,
+svg text {
+    font-family: "Gudea", sans-serif;
+}
+
+body {
+    background-color: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
