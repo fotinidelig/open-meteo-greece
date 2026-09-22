@@ -5,15 +5,15 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/open-meteo-greece/',
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      // Same-origin in the browser; Vite forwards to Open-Meteo.
-      // Avoids Firefox tracking protection treating the API as a third-party request.
-      '/open-meteo': {
+      // Must NOT be a prefix of `base` (e.g. `/open-meteo` steals `/open-meteo-greece/`).
+      '/api/open-meteo': {
         target: 'https://archive-api.open-meteo.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/open-meteo/, ''),
+        rewrite: (path) => path.replace(/^\/api\/open-meteo/, ''),
       },
     },
   },

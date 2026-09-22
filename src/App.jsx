@@ -15,7 +15,7 @@ function App() {
       <div className='main-container'>
 
         <h1 className="app-title">
-          Greek temperatures in2026:{" "}
+          Greek temperatures in 2026:{" "}
           <span className="app-title__chill">warm</span> winter,{" "}
           <span className="app-title__warm">chill</span> summer
         </h1>

@@ -11,7 +11,7 @@ import { GreeceMap } from "./Map";
 import { fetchYearData } from "./FetchData";
 import { fetchDiff } from "./ComputeDiff";
 
-const RECT_SPRING = { type: "spring", stiffness: 260, damping: 28, mass: 0.7 };
+const RECT_SPRING = { type: 'spring', stiffness: 100, damping: 18 }; //{ type: "spring", stiffness: 260, damping: 28, mass: 0.7 };
 const coordinates = CITIES.sort((a, b) => b.lat - a.lat);
 
 const colorLegendHeight = 10
@@ -166,21 +166,26 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
         const y = yScale(d.city);
         const w = xScale.bandwidth();
         const h = yScale.bandwidth();
-        const key = d.city + d.year + d.week;
+        const key = d.city + d.week;
 
         // No difference available → flat gray cell, no hover / tooltip
         if (d.value == null) {
             return (
-                <rect
+                <motion.rect
                     key={key}
                     rx={3}
                     x={x}
                     y={y}
-                    width={w}
-                    height={h}
                     fill="#666"
-                    opacity={0.3}
                     pointerEvents="none"
+                    initial={{opacity: 0, width: 0, height: 0}}
+                    animate={{
+                        width: w,
+                        height: h,
+                        opacity: 0.3,
+                    }}
+                    exit={{opacity: 0, width: 0, height: 0}}
+                    transition={RECT_SPRING}
                 />
             );
         }
@@ -200,20 +205,21 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
         return (
             <g key={key}>
                 <motion.rect
-                    rx={3}
                     x={x}
                     y={y}
-                    width={w}
-                    height={h}
+                    rx={3}
                     fill={colorScale(d.value)}
                     pointerEvents="none"
-                    initial={false}
+                    initial={{opacity: 0, width: 0, height: 0}}
                     animate={{
+                        width: w,
+                        height: h,
                         opacity: saturation,
                         filter: `saturate(${saturation})`,
                         stroke: matchesLegend ? "#7C1024" : "transparent",
-                        strokeWidth: 0.5,
+                        strokeWidth: 0.5
                     }}
+                    exit={{opacity: 0, width: 0, height: 0}}
                     transition={RECT_SPRING}
                 />
                 <rect

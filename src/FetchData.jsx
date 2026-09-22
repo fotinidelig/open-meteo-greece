@@ -13,8 +13,9 @@ function yearDateRange(year) {
 
 function buildArchiveUrl(startDate, endDate) {
   // Dev: Vite proxy (same origin). Production: Open-Meteo directly.
+  // Path must not be a prefix of vite `base` (`/open-meteo` would steal `/open-meteo-greece/`).
   const apiBase = import.meta.env.DEV
-    ? "/open-meteo"
+    ? "/api/open-meteo"
     : "https://archive-api.open-meteo.com";
 
   return (
