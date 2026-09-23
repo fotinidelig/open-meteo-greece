@@ -19,4 +19,5 @@ export const CITIES = [
     { name: 'Mytilene', lat: 39.10, lon: 26.55 },
     { name: 'Corfu', lat: 39.62, lon: 19.92 },
     { name: 'Syros', lat: 37.45, lon: 24.94 },
-];
+].sort((a, b) => b.lat - a.lat);
+
