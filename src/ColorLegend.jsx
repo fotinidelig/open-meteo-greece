@@ -58,22 +58,23 @@ export const ColorLegend = ({
   const differenceLabels = (
       <motion.g>
         <motion.text
-          x={xScale(0) + 5}
-          y={-10}
-          textAnchor="start"
+          x={xScale(max)}
+          textAnchor="end"
+          y={-7}
           {...tickLabelProps}
-          initial={false}
+          initial={{ y: 0, opacity: 0 }}
           animate={{
             opacity: showDifferenceLabels ? 1 : 0,
           }}
+          exit={{ y: 0, opacity: 0 }}
           transition={TRIANGLE_SPRING}
         >
           → 2026 hotter than 2025
         </motion.text>
         <motion.text
-          x={xScale(0) - 5}
-          y={-10}
-          textAnchor="end"
+          x={xScale(min)}
+          y={-7}
+          textAnchor="start"
           {...tickLabelProps}
           initial={false}
           animate={{
@@ -137,7 +138,6 @@ export const ColorLegend = ({
     if (!context) {
       return;
     }
-
     for (let i = 0; i < boundsWidth; ++i) {
       context.fillStyle = colorScale((max - min) * i / boundsWidth + min);
       context.fillRect(i, 0, 1, boundsHeight);
@@ -148,7 +148,7 @@ export const ColorLegend = ({
     context.strokeStyle = "grey";
     context.lineWidth = .5;
     context.strokeRect(0.5, 0.5, boundsWidth - 1, boundsHeight - 1);
-  }, [width, height]);
+  }, [width, height, colorScale]);
 
   return (
     <div style={{ width, height }}>

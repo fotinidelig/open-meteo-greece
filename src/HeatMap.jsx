@@ -12,7 +12,6 @@ import { fetchYearData } from "./FetchData";
 import { fetchDiff } from "./ComputeDiff";
 
 const RECT_SPRING = { type: 'spring', stiffness: 100, damping: 18 }; //{ type: "spring", stiffness: 260, damping: 28, mass: 0.7 };
-const coordinates = CITIES.sort((a, b) => b.lat - a.lat);
 
 const colorLegendHeight = 10
 const colorLegendMargin = 30;
@@ -67,7 +66,7 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
     const [heatmapData, setHeatmapData] = useState(null);
     const [hoveredXY, setHoveredXY] = useState(null);
     const [hoveredLegendValue, setHoveredLegendValue] = useState(null);
-    const hoveredValueError = 1; // we will highlight legend values within this range of the hovered value
+    const hoveredValueError = showDifference ? .3 : .8; // we will highlight legend values within this range of the hovered value
     const [interactionData, setInteractionData] = useState(null);
     const [error, setError] = useState(null);
 
@@ -124,7 +123,10 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
             .padding(0.05);
 
         const [minTemp, maxTemp] = extent(heatmapData, (d) => d.value);
-        const domain = showDifference ? [minTemp, 0, maxTemp] : [minTemp, 10, maxTemp];
+        const domain = 
+            showDifference ? 
+                [Math.min(minTemp, 0), 0, maxTemp] : 
+                [Math.min(minTemp, 10), 10, maxTemp];
         const colorScale = scaleLinear()
             .domain(domain)
             .range(["#83EBD8", "#ffffff", "#7C1024"])

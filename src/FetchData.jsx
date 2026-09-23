@@ -4,10 +4,14 @@ import { CITIES } from "./cities";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function yearDateRange(year) {
-  const startDate = new Date(year, 0, 1).toISOString().split("T")[0];
-  let endDate = new Date(year, 11, 31).toISOString().split("T")[0];
-  const now = new Date().toISOString().split("T")[0];
-  if (now < endDate) endDate = now;
+  const startDate = `${year}-01-01`;
+  let endDate = `${year}-12-31`;
+  const now = new Date();
+  if (year === now.getFullYear()) {
+    const nowMonth = String(now.getMonth() + 1).padStart(2, "0");
+    const nowDay = String(now.getDate()).padStart(2, "0");
+    endDate = `${year}-${nowMonth}-${nowDay}`;
+  }
   return { startDate, endDate };
 }
 
