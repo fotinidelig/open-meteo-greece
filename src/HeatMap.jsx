@@ -342,12 +342,12 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
         <div>
             <div style={{ position: "relative", width, height }}>
                 <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-                    {hoveredXY?.city && <GreeceMap 
+                    {<GreeceMap 
                     margin={mapMargin}
                     width={width - mapMargin.left - mapMargin.right} 
                     height={height - mapMargin.top - mapMargin.bottom} 
                     cityName={hoveredXY?.city}
-                    strokeColor={"#505050"}
+                    showMap={hoveredXY ? true : false}
                     />}
                 </div>
                 <svg
