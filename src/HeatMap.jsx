@@ -34,6 +34,7 @@ function buildXTicks(yearWeeks) {
     const yearTicks = [];
     const monthTicks = [];
     const seasonTicks = [];
+    const seasonStartMonthTicks = [];
     let prevYear = null;
     let prevMonthKey = null;
     let prevSeason = null;
@@ -53,15 +54,17 @@ function buildXTicks(yearWeeks) {
         const season = seasonOf(d.year, d.week);
         if (season !== prevSeason) {
             seasonTicks.push({ startKey: key, endKey: key, label: season });
+            // First month of this season (for sparse mobile x labels)
+            seasonStartMonthTicks.push({ key, label: MONTH_ABBR[month] });
             prevSeason = season;
         } else {
             seasonTicks[seasonTicks.length - 1].endKey = key;
         }
     }
-    return { yearTicks, monthTicks, seasonTicks };
+    return { yearTicks, monthTicks, seasonTicks, seasonStartMonthTicks };
 }
 
-export const HeatMap = ({width, height, years, activeYear, showDifference = false, ...props}) => {
+export const HeatMap = ({width, height, years, activeYear, showDifference = false, isMobile = false, ...props}) => {
     // One row per city × week: { city, year, week, value }
     const [heatmapData, setHeatmapData] = useState(null);
     const [hoveredXY, setHoveredXY] = useState(null);
@@ -111,16 +114,17 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
             ).values(),
         ].sort((a, b) => a.year - b.year || a.week - b.week);
 
+        const padding = isMobile ? 0.0 : 0.05;
         const xScale = scaleBand()
             .domain(yearWeeks.map(weekKey))
             .range([0, width])
-            .padding(0.05);
+            .padding(padding);
 
         const cityNames = CITIES.map((c) => c.name);
         const yScale = scaleBand()
             .domain(cityNames)
             .range([MARGIN.top, height - MARGIN.bottom])
-            .padding(0.05);
+            .padding(padding);
 
         const [minTemp, maxTemp] = extent(heatmapData, (d) => d.value);
         const domain = 
@@ -133,10 +137,12 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
             .interpolate(interpolateRgb)
             .clamp(true);
 
-        const { yearTicks, monthTicks, seasonTicks } = buildXTicks(yearWeeks);
+        const { monthTicks: allMonthTicks, seasonTicks, seasonStartMonthTicks } = buildXTicks(yearWeeks);
+        // Mobile: only the first month of each season (Dec/Mar/Jun/Sep etc.)
+        const monthTicks = isMobile ? seasonStartMonthTicks : allMonthTicks;
 
-        return { xScale, yScale, colorScale, yearTicks, monthTicks, seasonTicks };
-    }, [heatmapData, width, height]);
+        return { xScale, yScale, colorScale, monthTicks, seasonTicks };
+    }, [heatmapData, width, height, showDifference, isMobile]);
 
     if (error) {
         return <div>Could not load data: {error}</div>;
@@ -150,13 +156,14 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
 
     const colorLegend = (
     <ColorLegend
+        isMobile={isMobile}
         height={colorLegendHeight}
-        leftOffset={width / 2}
-        width={width / 2}
+        leftOffset={isMobile ? 0 : width / 2}
+        width={isMobile ? width : width / 2}
         colorScale={colorScale}
         margin={MARGIN}
         showDifference={showDifference}
-        colorLegendMargin={colorLegendMargin}
+        colorLegendMargin={isMobile ? - MARGIN.top - 10 : colorLegendMargin}
         interactionData={interactionData}
         onHoverValue={setHoveredLegendValue}
         onHoverEnd={() => setHoveredLegendValue(null)}
@@ -342,6 +349,12 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
       };
     return (
         <div>
+            {/* Mobile: legend sits under the year filters (above the chart) */}
+            {isMobile && (
+                <div style={{ width: "100%", marginBottom: 0, minHeight: 50 }}>
+                    {colorLegend}
+                </div>
+            )}
             <div style={{ position: "relative", width, height }}>
                 <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
                     {<GreeceMap 
@@ -371,7 +384,7 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
                     showDifference={showDifference}
                 />
             </div>
-            {colorLegend}
+            {!isMobile && colorLegend}
         </div>
     );
 }

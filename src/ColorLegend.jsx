@@ -6,6 +6,7 @@ const TRIANGLE_SPRING = { type: "spring", stiffness: 220, damping: 20, mass: 0.7
 
 
 export const ColorLegend = ({
+  isMobile,
   height,
   colorScale,
   width,
@@ -35,18 +36,22 @@ export const ColorLegend = ({
     fill: "#666",
   };
 
-  const allTicks = xScale.ticks(5).map((tick) => (
+  const nTicks = isMobile ? 3 : 5;
+  const allTicks = xScale.ticks(nTicks).map((tick) => (
     <g key={tick}>
-      <line
-        x1={xScale(tick)}
-        x2={xScale(tick)}
-        y1={0}
-        y2={boundsHeight + 10}
-        stroke="#666"
-      />
+      {/* scale(1, -1) flips the tick line above the bar on mobile */}
+      <g transform={isMobile ? "scale(1, -1) translate(0, -10)" : undefined}>
+        <line
+          x1={xScale(tick)}
+          x2={xScale(tick)}
+          y1={0}
+          y2={boundsHeight + 5}
+          stroke="#666"
+        />
+      </g>
       <text
         x={xScale(tick)}
-        y={boundsHeight + 20}
+        y={isMobile ? -(boundsHeight + 5) : boundsHeight + 20}
         textAnchor="middle"
         {...tickLabelProps}
       >
@@ -56,7 +61,7 @@ export const ColorLegend = ({
   ));
   const showDifferenceLabels = showDifference && !legendHoverValue && !interactionData;
   const differenceLabels = (
-      <motion.g>
+      <motion.g transform={isMobile ? "translate(0, 30)" : undefined}>
         <motion.text
           x={xScale(max)}
           textAnchor="end"

@@ -3,7 +3,7 @@ import { useDimensions } from "./use-dimensions";
 
 const MARGIN = { top: 20, right: 0, bottom: 90, left: 0 };
 
-export const Filters = ({ years, selection, setSelection }) => {
+export const Filters = ({ years, selection, setSelection, isMobile }) => {
   return (
     <div
       className="filters"
@@ -30,7 +30,7 @@ export const Filters = ({ years, selection, setSelection }) => {
           type="button"
           role="radio"
           aria-checked={selection === year}
-          className={`filters__option${selection === year ? " is-active" : ""}`}
+          className={`filters__option${selection === year ? " is-active" : ""} ${isMobile ? "is-mobile" : ""}`}
           onClick={() => setSelection(year)}
         >
           {year}
@@ -41,7 +41,7 @@ export const Filters = ({ years, selection, setSelection }) => {
         type="button"
         role="radio"
         aria-checked={selection === "difference"}
-        className={`filters__option${selection === "difference" ? " is-active" : ""}`}
+        className={`filters__option${selection === "difference" ? " is-active" : ""} ${isMobile ? "is-mobile" : ""}`}
         onClick={() => setSelection("difference")}
       >
         Difference
