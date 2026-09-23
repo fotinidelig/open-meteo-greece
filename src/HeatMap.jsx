@@ -13,9 +13,9 @@ import { fetchDiff } from "./ComputeDiff";
 
 const RECT_SPRING = { type: 'spring', stiffness: 100, damping: 18 }; //{ type: "spring", stiffness: 260, damping: 28, mass: 0.7 };
 
-const colorLegendHeight = 10
-const colorLegendMargin = 30;
-const MARGIN = { top: 20, right: 0, bottom: 90, left: 0 };
+const colorLegendHeight = 8
+const colorLegendMargin = 0;
+const MARGIN = { top: 20, right: 0, bottom: 60, left: 0 };
 const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const SEASON_OF_MONTH = [
     "Winter", "Winter",

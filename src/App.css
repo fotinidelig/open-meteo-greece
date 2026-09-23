@@ -1,8 +1,8 @@
 .main-container {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 12fr;
-  height: 95vh;
+  grid-template-rows: 1fr 12fr 1fr;
+  height: 90vh;
   width: 95vw;
   background-color: #f0f0f0;
   border-radius: 10px;
@@ -119,4 +119,42 @@
   /* Tall enough for cities; the page (not this box) scrolls */
   height: min(1400px, 220vw);
   min-height: 70vh;
+}
+
+.footer {
+  grid-column: 1 / -1; /* full width */
+  grid-row: 3;
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  flex-direction: row;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 0px 0px;
+  font-size: 15px;
+  color: #7C1024;
+  box-sizing: border-box;
+}
+
+.footer.is-mobile {
+  justify-content: center;
+  align-items: center;
+}
+
+.footer a {
+  color: #7C1024;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footer a:hover {
+  color: #7C1024;
+  font-weight: 600;
+}
+
+.footer-circle {
+  width: 4px;
+  height: 4px;
+  background-color: #7C1024;
+  border-radius: 50%;
 }

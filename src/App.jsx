@@ -15,7 +15,7 @@ function App() {
   return (
     <>
       <div className={`main-container${isMobile ? ' is-mobile' : ''}`}>
-        <h1 className="app-title">
+        <h1 className={`app-title${isMobile ? ' is-mobile' : ''}`}>
           Greek temperatures in 2026:{" "}
           <span className="app-title__chill">warm</span> winter,{" "}
           <span className="app-title__warm">chill</span> summer
@@ -38,6 +38,20 @@ function App() {
             isMobile={isMobile}
           />
         </div>
+      </div>
+
+      <div className={`footer${isMobile ? ' is-mobile' : ''}`}>
+        <span>&copy; Fotini Deligiannaki</span>
+        <circle className="footer-circle" />
+        <span style={{ fontSize: '13px' }}>
+          <a
+            href="https://github.com/fotinidelig/open-meteo-greece"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on Github
+          </a>
+        </span>
       </div>
     </>
   );
