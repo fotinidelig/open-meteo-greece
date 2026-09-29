@@ -59,15 +59,16 @@ export const GreeceMap = ({
   height,
   margin,
   cityName = null,
-  lineWidth = 0,
+  lineWidth = 0.5,
   showMap = false,
 }) => {
   const canvasRef = useRef(null);
+  const projectionRef = useRef(null);
   const [point, setPoint] = useState(null);
 
-  // Rewind once per dataset (not every render of canvas size).
   const mapData = useMemo(() => rewindGeoJson(data), []);
 
+  // Draw the map once when size / data change — never on showMap / hover.
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !width || !height || !mapData) return;
@@ -75,8 +76,8 @@ export const GreeceMap = ({
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    // 1) Fit the (rewound) GeoJSON to the canvas — uses real data bounds.
     const projection = geoMercator().fitSize([width, height], mapData);
+    projectionRef.current = projection;
 
     const path = geoPath().projection(projection).context(context);
 
@@ -84,28 +85,30 @@ export const GreeceMap = ({
     context.beginPath();
     path(mapData);
     context.strokeStyle = "#505050";
-    context.lineWidth = 0.5;
-    if (showMap) {
-      context.stroke();
-    }
+    context.lineWidth = lineWidth;
+    context.stroke();
+  }, [width, height, mapData, lineWidth]);
 
-    // Projection input is [longitude, latitude], not [lat, lon].
-    if (cityName) {
-      const coordinates = CITIES.find((c) => c.name === cityName);
-      if (coordinates?.lon != null && coordinates?.lat != null) {
-        setPoint(projection([coordinates.lon, coordinates.lat]));
-      }
+  // Cheap: only reproject the pin when the hovered city changes.
+  useEffect(() => {
+    const projection = projectionRef.current;
+    if (!projection || !cityName) {
+      setPoint(null);
+      return;
+    }
+    const coordinates = CITIES.find((c) => c.name === cityName);
+    if (coordinates?.lon != null && coordinates?.lat != null) {
+      setPoint(projection([coordinates.lon, coordinates.lat]));
     } else {
       setPoint(null);
     }
-  }, [width, height, cityName, mapData, lineWidth]);
+  }, [cityName, width, height]);
 
   if (!width || !height) {
     return null;
   }
 
   const pinSize = 24;
-  const opacity = point ? 1 : 0;
   const img = point && (
     <motion.img
       src={pinIcon}
@@ -118,12 +121,11 @@ export const GreeceMap = ({
         height: pinSize,
         transform: "translate(-50%, -100%)",
         pointerEvents: "none",
-        opacity: opacity,
       }}
       animate={{
         left: point[0],
         top: point[1],
-        opacity: opacity,
+        opacity: showMap ? 1 : 0,
       }}
       transition={{
         type: "spring",
@@ -144,8 +146,18 @@ export const GreeceMap = ({
         bottom: margin.bottom,
       }}
     >
-      <canvas ref={canvasRef} width={width} height={height} />
-      {cityName && img}
+      {/* Hide with CSS — keeps the painted bitmap, no redraw on hover */}
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        style={{
+          opacity: showMap ? 1 : 0,
+          transition: "opacity 100ms ease",
+          pointerEvents: "none",
+        }}
+      />
+      {img}
     </div>
   );
 };

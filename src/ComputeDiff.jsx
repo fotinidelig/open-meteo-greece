@@ -1,4 +1,4 @@
-import { fetchYearData } from "./FetchData";
+import { fetchYearData, cityYearExtremes } from "./FetchData";
 
 /**
  * Build year-over-year differences in the same shape as heatmapData:
@@ -52,7 +52,9 @@ export async function fetchDiff(fromYear = 2025, toYear = 2026) {
     fetchYearData(fromYear),
     fetchYearData(toYear),
   ]);
-  return computeDiff([...fromData, ...toData], fromYear, toYear);
+  const diffData = computeDiff([...fromData, ...toData], fromYear, toYear);
+  diffData.extremes = cityYearExtremes(diffData);
+  return diffData;
 }
 
 export default computeDiff;

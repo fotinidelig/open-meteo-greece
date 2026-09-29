@@ -5,17 +5,19 @@ import { interpolateRgb } from "d3-interpolate";
 import { useDimensions } from "./use-dimensions";
 import { motion } from "motion/react";
 import { ColorLegend } from "./ColorLegend";
+import { IconLegend } from "./IconLegend";
 import { Tooltip } from "./Tooltip";
 import { CITIES } from "./cities";
 import { GreeceMap } from "./Map";
 import { fetchYearData } from "./FetchData";
 import { fetchDiff } from "./ComputeDiff";
+import maxTempIcon from "./assets/max_temperature_icon.svg";
+import minTempIcon from "./assets/min_temperature_icon.svg";
 
 const RECT_SPRING = { type: 'spring', stiffness: 100, damping: 18 }; //{ type: "spring", stiffness: 260, damping: 28, mass: 0.7 };
 
 const colorLegendHeight = 8
-const colorLegendMargin = 0;
-const MARGIN = { top: 20, right: 0, bottom: 60, left: 0 };
+const MARGIN = { top: 20, right: 0, bottom: 50, left: 0 };
 const MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const SEASON_OF_MONTH = [
     "Winter", "Winter",
@@ -73,6 +75,9 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
     const [interactionData, setInteractionData] = useState(null);
     const [error, setError] = useState(null);
 
+
+    const svgDivHeight = isMobile ? height*0.9 : height;
+
     const fromYear = years?.[0] ?? 2025;
     const toYear = years?.[1] ?? 2026;
 
@@ -123,7 +128,7 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
         const cityNames = CITIES.map((c) => c.name);
         const yScale = scaleBand()
             .domain(cityNames)
-            .range([MARGIN.top, height - MARGIN.bottom])
+            .range([MARGIN.top, svgDivHeight - MARGIN.bottom])
             .padding(padding);
 
         const [minTemp, maxTemp] = extent(heatmapData, (d) => d.value);
@@ -144,6 +149,71 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
         return { xScale, yScale, colorScale, monthTicks, seasonTicks };
     }, [heatmapData, width, height, showDifference, isMobile]);
 
+    const axisY = svgDivHeight - MARGIN.bottom;
+    const xAxis = useMemo(() => {
+        if (!xScale) return null;
+        return (
+        <g aria-hidden="true">
+            {monthTicks.map((t) => {
+                const x = xScale(t.key);
+                if (x == null) return null;
+                return (
+                    <g key={`month-${t.key}`} transform={`translate(${x}, 0)`}>
+                        <line
+                            x1={0}
+                            x2={0}
+                            y1={axisY}
+                            y2={axisY + 4}
+                            stroke="#666"
+                            strokeWidth={1}
+                        />
+                        <text
+                            x={1}
+                            y={axisY + 12}
+                            fontSize={11}
+                            fill="#666"
+                            fontFamily="Gudea, sans-serif"
+                        >
+                            {t.label}
+                        </text>
+                    </g>
+                );
+            })}
+            {seasonTicks.map((t) => {
+                const x0 = xScale(t.startKey);
+                const xEnd = xScale(t.endKey);
+                if (x0 == null || xEnd == null) return null;
+                const x1 = xEnd + xScale.bandwidth();
+                const y0 = axisY + 16;
+                const y1 = axisY + 22;
+                const wideEnough = x1 - x0 > 40;
+                return (
+                    <g key={`season-${t.startKey}`}>
+                        <path
+                            d={`M ${x0} ${y0} L ${x0} ${y1} L ${x1} ${y1}`}
+                            fill="none"
+                            stroke="#666"
+                            strokeWidth={1}
+                        />
+                        {wideEnough && (
+                            <text
+                                x={(x0 + x1) / 2}
+                                y={y1 + 11}
+                                fontSize={10}
+                                fill="#666"
+                                textAnchor="middle"
+                                fontFamily="Gudea, sans-serif"
+                            >
+                                {t.label}
+                            </text>
+                        )}
+                    </g>
+                );
+            })}
+        </g>
+        );
+    }, [monthTicks, seasonTicks, xScale, axisY]);
+
     if (error) {
         return <div>Could not load data: {error}</div>;
     }
@@ -153,7 +223,7 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
     if (!heatmapData || !width || !height || !xScale) {
         return <div>Loading…</div>;
     }
-
+    
     const colorLegend = (
     <ColorLegend
         isMobile={isMobile}
@@ -163,11 +233,20 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
         colorScale={colorScale}
         margin={MARGIN}
         showDifference={showDifference}
-        colorLegendMargin={isMobile ? - MARGIN.top - 10 : colorLegendMargin}
+        colorLegendMargin={isMobile ? - MARGIN.top : 0}
         interactionData={interactionData}
         onHoverValue={setHoveredLegendValue}
         onHoverEnd={() => setHoveredLegendValue(null)}
     />
+    );
+
+    const iconLegend = (
+        <IconLegend
+            isMobile={isMobile}
+            leftOffset={0}
+            margin={MARGIN}
+            iconLegendMargin={isMobile ? 0: 0}
+        />
     );
 
     const allRects = heatmapData.map((d) => {
@@ -279,83 +358,59 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
         );
     });
 
-    const axisY = height - MARGIN.bottom;
-    const xAxis = (
-        <g aria-hidden="true">
-            {monthTicks.map((t) => {
-                const x = xScale(t.key);
-                if (x == null) return null;
-                return (
-                    <g key={`month-${t.key}`} transform={`translate(${x}, 0)`}>
-                        <line
-                            x1={0}
-                            x2={0}
-                            y1={axisY}
-                            y2={axisY + 4}
-                            stroke="#666"
-                            strokeWidth={1}
-                        />
-                        <text
-                            x={1}
-                            y={axisY + 12}
-                            fontSize={11}
-                            fill="#666"
-                            fontFamily="Gudea, sans-serif"
-                        >
-                            {t.label}
-                        </text>
-                    </g>
-                );
-            })}
-            {seasonTicks.map((t) => {
-                const x0 = xScale(t.startKey);
-                const xEnd = xScale(t.endKey);
-                if (x0 == null || xEnd == null) return null;
-                const x1 = xEnd + xScale.bandwidth();
-                const y0 = axisY + 16;
-                const y1 = axisY + 22;
-                const wideEnough = x1 - x0 > 40;
-                return (
-                    <g key={`season-${t.startKey}`}>
-                        <path
-                            d={`M ${x0} ${y0} L ${x0} ${y1} L ${x1} ${y1}`}
-                            fill="none"
-                            stroke="#666"
-                            strokeWidth={1}
-                        />
-                        {wideEnough && (
-                            <text
-                                x={(x0 + x1) / 2}
-                                y={y1 + 11}
-                                fontSize={10}
-                                fill="#666"
-                                textAnchor="middle"
-                                fontFamily="Gudea, sans-serif"
-                            >
-                                {t.label}
-                            </text>
-                        )}
-                    </g>
-                );
-            })}
-        </g>
-    );
-
     const mapMargin = {
         top: MARGIN.top + 10,
         left: 0,
         right: 0,
         bottom: MARGIN.bottom + 10,
       };
+
+    const extremeIcons = (() => {
+        if (!hoveredXY || !heatmapData.extremes) return null;
+        const year = interactionData?.year ?? activeYear;
+        const ext = heatmapData.extremes.find(
+            (e) => e.city === hoveredXY.city && e.year === year,
+        );
+        if (!ext) return null;
+
+        const bw = xScale.bandwidth();
+        const bh = yScale.bandwidth();
+        const size = Math.min(bw, bh)*1.12;
+
+        const place = (week, href) => {
+            const x = xScale(weekKey({ year, week }));
+            const y = yScale(hoveredXY.city);
+            if (x == null || y == null) return null;
+            return (
+                <image
+                    key={`${href}-${week}`}
+                    href={href}
+                    x={x + (bw - size) / 2}
+                    y={y + (bh - size) / 2}
+                    width={size}
+                    height={size}
+                    pointerEvents="none"
+                />
+            );
+        };
+
+        return (
+            <g pointerEvents="none">
+                {place(ext.minWeek, minTempIcon)}
+                {place(ext.maxWeek, maxTempIcon)}
+            </g>
+        );
+    })();
+
     return (
         <div>
             {/* Mobile: legend sits under the year filters (above the chart) */}
             {isMobile && (
-                <div style={{ width: "100%", marginBottom: 0, minHeight: 50 }}>
+                <div style={{ position: "relative", width: "100%", marginTop: 13, minHeight: 30 }}>
                     {colorLegend}
                 </div>
             )}
-            <div style={{ position: "relative", width, height }}>
+            <div style={{ position: "relative", width: width, height: svgDivHeight}}>
                 <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
                     {<GreeceMap 
                     margin={mapMargin}
@@ -368,7 +423,7 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
                 <svg
                     // style={{ position: "relative", zIndex: hoveredXY?.city ? 0 : 1 }}
                     width={width}
-                    height={height}
+                    height={svgDivHeight}
                     role="img"
                     aria-label="Heatmap of Greece's cities temperatures"
                     overflow="visible"
@@ -376,15 +431,54 @@ export const HeatMap = ({width, height, years, activeYear, showDifference = fals
                     {cityLabels}
                     {allRects}
                     {xAxis}
+                    {extremeIcons}
                 </svg>
                 <Tooltip
                     interactionData={interactionData}
                     width={width}
-                    height={height}
+                    height={svgDivHeight}
                     showDifference={showDifference}
                 />
             </div>
-            {!isMobile && colorLegend}
+            {isMobile && (
+            <div style={{ 
+                display: "flex", 
+                justifyContent: "left", 
+                width: "100%", 
+                minHeight: height - svgDivHeight,
+                marginTop: 0
+                }}>
+                {iconLegend}
+            </div> )}
+
+            {!isMobile && (
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        width: "100%",
+                    }}
+                >
+                    <div style={{ width: "50%" }}>
+                        {iconLegend}
+                    </div>
+                    <div style={{ width: "50%" }}>
+                        <ColorLegend
+                            isMobile={isMobile}
+                            height={colorLegendHeight}
+                            leftOffset={0}
+                            width={width / 2}
+                            colorScale={colorScale}
+                            margin={MARGIN}
+                            showDifference={showDifference}
+                            colorLegendMargin={0}
+                            interactionData={interactionData}
+                            onHoverValue={setHoveredLegendValue}
+                            onHoverEnd={() => setHoveredLegendValue(null)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

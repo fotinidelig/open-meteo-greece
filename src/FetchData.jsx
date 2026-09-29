@@ -1,4 +1,4 @@
-import { mean, rollups } from "d3-array";
+import { greatest, least, mean, rollups } from "d3-array";
 import { CITIES } from "./cities";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -40,6 +40,7 @@ function buildArchiveUrl(startDate, endDate) {
 /**
  * Fetch weekly mean temperatures for one calendar year.
  * Returns heatmap rows: { city, year, week, value }
+ * Also sets `weeks.extremes`: { city, year, minWeek, minValue, maxWeek, maxValue }
  */
 export async function fetchYearData(year) {
   const { startDate, endDate } = yearDateRange(year);
@@ -71,7 +72,7 @@ export async function fetchYearData(year) {
     }),
   );
 
-  return rollups(
+  const weeks = rollups(
     daily.filter((d) => d.temp != null && !Number.isNaN(d.temp)),
     (rows) => mean(rows, (d) => d.temp),
     (d) => d.city,
@@ -81,6 +82,31 @@ export async function fetchYearData(year) {
     byYear.flatMap(([yr, byWeek]) =>
       byWeek.map(([week, value]) => ({ city, year: yr, week, value })),
     ),
+  );
+
+  // Week of the coldest / warmest weekly mean, per city and year.
+  // Kept on the array so existing `.map` consumers stay unchanged.
+  weeks.extremes = cityYearExtremes(weeks);
+  return weeks;
+}
+
+export function cityYearExtremes(weeks) {
+  return rollups(
+    weeks,
+    (rows) => {
+      const minRow = least(rows, (d) => d.value);
+      const maxRow = greatest(rows, (d) => d.value);
+      return {
+        minWeek: minRow.week,
+        minValue: minRow.value,
+        maxWeek: maxRow.week,
+        maxValue: maxRow.value,
+      };
+    },
+    (d) => d.city,
+    (d) => d.year,
+  ).flatMap(([city, byYear]) =>
+    byYear.map(([year, ext]) => ({ city, year, ...ext })),
   );
 }
 
